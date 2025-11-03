@@ -1,20 +1,11 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 // import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
   <header>
-   
     <h1>This is my first VueJs project</h1>
-    <!-- <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div> -->
   </header>
 
   <RouterView />
@@ -82,4 +73,57 @@ nav a:first-of-type {
     margin-top: 1rem;
   }
 }
+</style> -->
+<!-- <template>
+  <div>
+    <h1>Component A</h1>
+  </div>
+  </template>
+
+  <script lang="ts">
+  import ComponentA from './components/componentA.vue'
+  import ComponentB from './components/componentB.vue'
+    export default {
+    name: 'App',
+    data(){
+      return {
+        number: 0,
+  }
+}
+}
+  </script> -->
+  <template>
+  <div id="app">
+    <CategoryComponent />
+    <PromotionComponent />
+  </div>
+</template>
+
+<script>
+import CategoryComponent from './components/CategoryComponent.vue';
+import PromotionComponent from './components/PromotionComponent.vue';
+
+export default {
+  name: 'App',
+  components: {
+    CategoryComponent,
+    PromotionComponent
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  text-align: center;
+  margin-top: 20px;
+   display: flex;
+  flex-direction: column; 
+  background-color: rgb(230, 222, 190);
+  
+
+}
 </style>
+
+
+
