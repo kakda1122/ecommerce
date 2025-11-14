@@ -1,5 +1,4 @@
-
-  <template>
+<template>
   <div id="app">
     <CategoryComponent />
     <PromotionComponent />
@@ -24,10 +23,8 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
   margin-top: 20px;
-   display: flex;
+  display: flex;
   flex-direction: column; 
   background-color: white;
-  
-
 }
-</style>
+</style> 
