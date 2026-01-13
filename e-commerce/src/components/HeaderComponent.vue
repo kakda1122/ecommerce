@@ -49,10 +49,12 @@
 
 <script>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'HeaderComponent',
   setup() {
+    const router = useRouter()
     const searchQuery = ref('')
     const cartCount = ref(0)
     const showUserMenu = ref(false)
@@ -60,13 +62,13 @@ export default {
     const handleSearch = () => {
       if (searchQuery.value.trim()) {
         console.log('Searching for:', searchQuery.value)
-        // Emit search event or navigate to search results
+        // TODO: Implement search functionality
       }
     }
 
     const toggleCart = () => {
       console.log('Toggle cart')
-      // Emit cart toggle event
+      // TODO: Implement cart toggle
     }
 
     const toggleUserMenu = () => {
@@ -74,8 +76,26 @@ export default {
     }
 
     const navigateTo = (page) => {
-      console.log('Navigate to:', page)
-      // Handle navigation
+      switch(page) {
+        case 'home':
+          router.push('/')
+          break
+        case 'categories':
+          router.push('/categories')
+          break
+        case 'deals':
+          // TODO: Implement deals page
+          console.log('Navigate to deals')
+          break
+        case 'about':
+          // TODO: Implement about page
+          console.log('Navigate to about')
+          break
+        case 'contact':
+          // TODO: Implement contact page
+          console.log('Navigate to contact')
+          break
+      }
     }
 
     const login = () => {

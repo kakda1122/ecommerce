@@ -17,6 +17,7 @@
 <script>
 import ButtonComponent from './ButtonComponent.vue';
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 
 export default {
@@ -25,6 +26,7 @@ export default {
     ButtonComponent
   },
   setup() {
+    const router = useRouter()
     const promotions = ref([]);
     const API_BASE_URL = 'http://localhost:3000/api/promotions';
 
@@ -45,7 +47,15 @@ export default {
     onMounted(fetchPromotions);
 
     const shopNow = (promotion) => {
-      alert("Let's shop: " + promotion.title);
+      // Navigate to a product or category related to the promotion
+      if (promotion.productId) {
+        router.push(`/product/${promotion.productId}`);
+      } else if (promotion.categoryId) {
+        router.push('/categories');
+      } else {
+        // Navigate to deals page or home
+        router.push('/');
+      }
     };
 
     return {

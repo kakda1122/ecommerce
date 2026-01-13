@@ -6,6 +6,7 @@
         class="product-card"
         v-for="(product, index) in displayedProducts"
         :key="index"
+        @click="viewProductDetail(product)"
       >
         <img v-if="product.image" :src="product.image" alt="Product Image" class="product-image" />
         <div class="product-info">
@@ -24,13 +25,16 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 export default {
   name: 'ProductComponent',
   setup() {
+    const router = useRouter()
     const products = ref([]);
     const API_BASE_URL = 'http://localhost:3000/api/products';
+    
     const fetchProducts = async () => {
       try {
         const response = await axios.get(API_BASE_URL)
@@ -44,10 +48,15 @@ export default {
       }
     }
 
+    const viewProductDetail = (product) => {
+      router.push(`/product/${product.id}`)
+    }
+
     onMounted(fetchProducts)
 
     return {
-      displayedProducts: products
+      displayedProducts: products,
+      viewProductDetail
     }
   }
 }
@@ -75,6 +84,7 @@ export default {
   background-color: #fff;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .product-card:hover {
