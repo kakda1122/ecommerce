@@ -55,7 +55,13 @@ import axios from 'axios'
 
 export default {
   name: 'ProductDetailView',
-  setup() {
+  props: {
+    productId: {
+      type: [String, Number],
+      required: true
+    }
+  },
+  setup(props) {
     const route = useRoute()
     const router = useRouter()
     const productStore = useProductStore()
@@ -67,8 +73,7 @@ export default {
 
     const fetchProduct = async () => {
       try {
-        const productId = route.params.id
-        const response = await axios.get(`${API_BASE_URL}/${productId}`)
+        const response = await axios.get(`${API_BASE_URL}/${props.productId}`)
         product.value = {
           ...response.data,
           image: response.data.image ? `http://localhost:3000/${response.data.image.replace(/\\/g, '/')}` : null,

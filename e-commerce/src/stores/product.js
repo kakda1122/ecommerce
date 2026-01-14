@@ -3,18 +3,38 @@ import { defineStore } from 'pinia'
 export const useProductStore = defineStore('product', {
   state: () => ({
     groups: [
-      'Milks & Diaries',
-      'Coffees & Teas',
-      'Pet Foods',
-      'Meats',
-      'Vegetables',
+      'Food & Vegetables',
+      'Drinks & Beverages', 
+      'Bakery & Cookies',
+      'Meat & Seafood',
+      'Dairy & Eggs',
       'Fruits',
+      'Snacks & Sweets',
+      'Pet Food'
     ],
     promotions: [],
     categories: [],
     products: [],
   }),
-  getters: {},
+  getters: {
+    getCategoriesByGroup: (state) => {
+      const grouped = {}
+      state.categories.forEach(category => {
+        const groupName = category.group || 'Other'
+        if (!grouped[groupName]) {
+          grouped[groupName] = []
+        }
+        grouped[groupName].push(category)
+      })
+      return grouped
+    },
+    getCategoryById: (state) => (id) => {
+      return state.categories.find(cat => cat.id === id)
+    },
+    getProductById: (state) => (id) => {
+      return state.products.find(product => product.id === id)
+    }
+  },
   actions: {
     async fetchGroups() {
       try {

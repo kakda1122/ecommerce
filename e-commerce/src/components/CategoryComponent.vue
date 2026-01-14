@@ -5,6 +5,7 @@
       v-for="(item, index) in displayedCategories"
       :key="index"
       :style="{ backgroundColor: item.color }"
+      @click="navigateToCategory(item)"
     >
       <img v-if="item.image" :src="item.image" alt="Category Image" />
       <h1>{{ item.name }}</h1>
@@ -15,11 +16,13 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 
 export default {
   name: 'CategoryComponent',
   setup() {
+    const router = useRouter()
     const categories = ref([]);
     const API_BASE_URL = 'http://localhost:3000/api/categories';
 
@@ -39,10 +42,15 @@ export default {
       }
     };
 
+    const navigateToCategory = (category) => {
+      router.push(`/categories/${category.id}`)
+    }
+
     onMounted(fetchCategories);
 
     return {
-      displayedCategories: categories
+      displayedCategories: categories,
+      navigateToCategory
     };
   }
 }
@@ -61,7 +69,15 @@ export default {
   text-align: center;
   margin: 10px;
   border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
+
+.category:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
 .category h1 {
   font-size: 14px;
   margin-top: 10px;

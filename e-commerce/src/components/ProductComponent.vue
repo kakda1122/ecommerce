@@ -49,7 +49,7 @@ export default {
     }
 
     const viewProductDetail = (product) => {
-      router.push(`/product/${product.id}`)
+      router.push(`/products/${product.id}`)
     }
 
     onMounted(fetchProducts)

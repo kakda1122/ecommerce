@@ -49,9 +49,9 @@ export default {
     const shopNow = (promotion) => {
       // Navigate to a product or category related to the promotion
       if (promotion.productId) {
-        router.push(`/product/${promotion.productId}`);
+        router.push(`/products/${promotion.productId}`);
       } else if (promotion.categoryId) {
-        router.push('/categories');
+        router.push(`/categories/${promotion.categoryId}`);
       } else {
         // Navigate to deals page or home
         router.push('/');
