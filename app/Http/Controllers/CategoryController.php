@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Category;
 
 class CategoryController extends Controller
 {
@@ -44,5 +45,18 @@ class CategoryController extends Controller
         return [
             "message" => "Deleting 1 category base on given categoryId"
         ];
+    }
+
+    // Enforce the CategoryPolicy in controller methods
+    public function show(Category $category)
+    {
+        $this->authorize('view', $category);
+        // Logic to show the category
+    }
+
+    public function updateStatus(Request $request, Category $category)
+    {
+        $this->authorize('updateStatus', $category);
+        // Logic to update the category status
     }
 }

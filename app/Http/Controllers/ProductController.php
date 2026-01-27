@@ -45,4 +45,14 @@ class ProductController extends Controller
             "message" => "Deleting 1 product base on given productId"
         ];
     }
+
+    // Add store method for creating products
+    public function store(Request $request)
+    {
+        // Ensure the user has permission to create products
+        abort_unless(auth()->user()->can('products.create'), 403);
+
+        // Logic to create a product
+        return response()->json(['message' => 'Product created successfully']);
+    }
 }
