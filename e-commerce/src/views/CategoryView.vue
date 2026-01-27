@@ -1,27 +1,18 @@
 <template>
   <div class="category-view">
     <h1>Categories</h1>
-    <div v-if="Object.keys(groupedCategories).length > 0" class="categories-by-group">
-      <div 
-        v-for="(categories, groupName) in groupedCategories" 
-        :key="groupName"
-        class="category-group"
+    <div v-if="!loading && allCategories.length > 0" class="category-grid">
+      <div
+        v-for="category in allCategories"
+        :key="category.id"
+        class="category-card"
+        @click="navigateToCategory(category)"
+        :style="{ backgroundColor: category.color || '#f8f9fa' }"
       >
-        <h2 class="group-title">{{ groupName }}</h2>
-        <div class="category-grid">
-          <div
-            v-for="category in categories"
-            :key="category.id"
-            class="category-card"
-            @click="navigateToCategory(category)"
-            :style="{ backgroundColor: category.color || '#f8f9fa' }"
-          >
-            <img v-if="category.image" :src="category.image" alt="Category Image" class="category-image" />
-            <div class="category-info">
-              <h3>{{ category.name }}</h3>
-              <p class="product-count">{{ category.productCount || 0 }} Products</p>
-            </div>
-          </div>
+        <img v-if="category.image" :src="category.image" alt="Category Image" class="category-image" />
+        <div class="category-info">
+          <h3>{{ category.name }}</h3>
+          <p class="product-count">{{ category.productCount || 0 }} Products</p>
         </div>
       </div>
     </div>
@@ -48,8 +39,38 @@ export default {
     const productStore = useProductStore()
     const loading = ref(true)
 
-    const groupedCategories = computed(() => {
-      return productStore.getCategoriesByGroup
+    const allCategories = computed(() => {
+      return productStore.categories.map(category => {
+        let imagePath = null
+        
+        if (category.image) {
+          try {
+            if (typeof category.image === 'string' && category.image.startsWith('[')) {
+              const imageArray = JSON.parse(category.image)
+              if (Array.isArray(imageArray) && imageArray.length > 0) {
+                imagePath = imageArray[0]
+              }
+            } else if (Array.isArray(category.image) && category.image.length > 0) {
+              imagePath = category.image[0]
+            } else {
+              imagePath = category.image
+            }
+            
+            if (imagePath) {
+              imagePath = imagePath.replace(/\\\\/g, '/').replace(/\\/g, '/')
+              imagePath = `http://localhost:3000/${imagePath}`
+            }
+          } catch (error) {
+            console.error('Error parsing image for category:', category.name, error)
+            imagePath = null
+          }
+        }
+        
+        return {
+          ...category,
+          image: imagePath
+        }
+      })
     })
 
     const navigateToCategory = (category) => {
@@ -57,12 +78,12 @@ export default {
     }
 
     onMounted(async () => {
-      await productStore.fetchCategories()
+      await productStore.initializeData()
       loading.value = false
     })
 
     return {
-      groupedCategories,
+      allCategories,
       loading,
       navigateToCategory
     }
@@ -73,7 +94,8 @@ export default {
 <style scoped>
 .category-view {
   padding: 20px;
-  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .category-view h1 {
@@ -83,82 +105,64 @@ export default {
   font-size: 2.5rem;
 }
 
-.categories-by-group {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.category-group {
-  margin-bottom: 50px;
-}
-
-.group-title {
-  color: #3498db;
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #3498db;
-  display: flex;
-  align-items: center;
-}
-
-.group-title::before {
-  content: "📂";
-  margin-right: 10px;
-  font-size: 1.5rem;
-}
-
 .category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+  gap: 25px;
 }
 
 .category-card {
-  background: white;
   border-radius: 15px;
-  padding: 20px;
+  padding: 25px;
   text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
-  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
   min-height: 200px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 
 .category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  border-color: #3498db;
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.category-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
 }
 
 .category-image {
   width: 80px;
   height: 80px;
+  border-radius: 50%;
   object-fit: cover;
-  border-radius: 12px;
   margin-bottom: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .category-info h3 {
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: bold;
-  margin: 0 0 8px 0;
+  margin: 10px 0;
   color: #2c3e50;
-  line-height: 1.3;
 }
 
 .product-count {
   color: #7f8c8d;
   font-size: 0.9rem;
-  margin: 0;
-  font-weight: 500;
+  margin: 5px 0;
 }
 
 .loading, .no-categories {
@@ -167,16 +171,6 @@ export default {
   color: #7f8c8d;
   font-size: 1.2rem;
 }
-
-/* Group-specific colors */
-.category-group:nth-child(1) .group-title::before { content: "🥬"; }
-.category-group:nth-child(2) .group-title::before { content: "🥤"; }
-.category-group:nth-child(3) .group-title::before { content: "🍪"; }
-.category-group:nth-child(4) .group-title::before { content: "🥩"; }
-.category-group:nth-child(5) .group-title::before { content: "🥛"; }
-.category-group:nth-child(6) .group-title::before { content: "🍎"; }
-.category-group:nth-child(7) .group-title::before { content: "🍫"; }
-.category-group:nth-child(8) .group-title::before { content: "🐕"; }
 
 @media (max-width: 768px) {
   .category-view {
@@ -188,17 +182,13 @@ export default {
     margin-bottom: 30px;
   }
   
-  .group-title {
-    font-size: 1.5rem;
-  }
-  
   .category-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
+    gap: 20px;
   }
   
   .category-card {
-    padding: 15px;
+    padding: 20px;
     min-height: 180px;
   }
   
@@ -208,18 +198,18 @@ export default {
   }
   
   .category-info h3 {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 }
 
 @media (max-width: 480px) {
   .category-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
+    gap: 15px;
   }
   
   .category-card {
-    padding: 12px;
+    padding: 15px;
     min-height: 160px;
   }
   
@@ -228,8 +218,8 @@ export default {
     height: 60px;
   }
   
-  .group-title {
-    font-size: 1.3rem;
+  .category-info h3 {
+    font-size: 1rem;
   }
 }
 </style>

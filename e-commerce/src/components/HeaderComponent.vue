@@ -48,13 +48,15 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useProductStore } from '../stores/product.js'
 
 export default {
   name: 'HeaderComponent',
   setup() {
     const router = useRouter()
+    const productStore = useProductStore()
     const searchQuery = ref('')
     const cartCount = ref(0)
     const showUserMenu = ref(false)
@@ -81,6 +83,7 @@ export default {
           router.push('/')
           break
         case 'categories':
+          // Navigate to categories list page
           router.push('/categories')
           break
         case 'deals':
@@ -112,6 +115,10 @@ export default {
       console.log('View orders')
       showUserMenu.value = false
     }
+
+    onMounted(async () => {
+      await productStore.initializeData()
+    })
 
     return {
       searchQuery,

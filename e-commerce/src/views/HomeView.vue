@@ -8,7 +8,6 @@
 
 <script>
 import { onMounted } from 'vue'
-import { useProductStore } from '../stores/product.js'
 import CategoryComponent from '../components/CategoryComponent.vue';
 import PromotionComponent from '../components/PromotionComponent.vue';
 import ProductComponent from '../components/ProductComponent.vue';
@@ -21,12 +20,6 @@ export default {
     ProductComponent
   },
   setup() {
-    const productStore = useProductStore()
-
-    onMounted(async () => {
-      await productStore.initializeData()
-    })
-
     return {}
   }
 }

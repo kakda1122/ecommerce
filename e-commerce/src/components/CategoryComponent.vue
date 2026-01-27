@@ -1,15 +1,15 @@
 <template>
   <div class="category-container">
     <div
-      class="category"
-      v-for="(item, index) in displayedCategories"
-      :key="index"
-      :style="{ backgroundColor: item.color }"
-      @click="navigateToCategory(item)"
-    >
-      <img v-if="item.image" :src="item.image" alt="Category Image" />
-      <h1>{{ item.name }}</h1>
-      <p>Products: {{ item.productCount }}</p>
+        class="category"
+        v-for="(category, index) in categories"
+        :key="index"
+        :style="{ backgroundColor: category.color }"
+        @click="navigateToCategory(category)"
+      >
+      <img v-if="category.image" :src="category.image" alt="Category Image" />
+      <h1>{{ category.name }}</h1>
+      <p>Products: {{ category.productCount }}</p>
     </div>
   </div>
 </template>
@@ -29,11 +29,9 @@ export default {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(API_BASE_URL);
-        
-        // Ensure the image path is correctly formatted
         categories.value = response.data.map(cat => ({
           ...cat,
-          image: cat.image ? `http://localhost:3000/${cat.image.replace(/\\/g, '/')}` : null,
+          image: cat.image ? `http://localhost:3000/${cat.image.replace(/\\\\/g, '/')}` : null,
         }));
 
         console.log('Fetched categories:', categories.value); 
@@ -49,7 +47,7 @@ export default {
     onMounted(fetchCategories);
 
     return {
-      displayedCategories: categories,
+      categories,
       navigateToCategory
     };
   }

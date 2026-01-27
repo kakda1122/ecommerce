@@ -1,8 +1,28 @@
 <template>
   <div class="product-detail">
+    <!-- Debug Info (can be removed in production) -->
+    <div v-if="false" class="debug-info">
+      <p><strong>Product ID:</strong> {{ productId }}</p>
+      <p><strong>Loading:</strong> {{ loading }}</p>
+      <p><strong>Product Found:</strong> {{ product ? 'Yes' : 'No' }}</p>
+      <p><strong>Store Products Count:</strong> {{ productStore.products.length }}</p>
+      <p><strong>Store Categories Count:</strong> {{ productStore.categories.length }}</p>
+      <details>
+        <summary>All Product IDs in Store:</summary>
+        <ul>
+          <li v-for="p in productStore.products" :key="p.id">
+            ID: {{ p.id }} - {{ p.name }}
+          </li>
+        </ul>
+      </details>
+    </div>
+
     <div v-if="product" class="product-container">
       <div class="product-image-section">
         <img v-if="product.image" :src="product.image" alt="Product Image" class="main-product-image" />
+        <div v-else class="no-image-placeholder">
+          <p>No Image Available</p>
+        </div>
       </div>
       <div class="product-info-section">
         <h1>{{ product.name }}</h1>
@@ -37,11 +57,15 @@
         </div>
       </div>
     </div>
+    
     <div v-else-if="loading" class="loading">
       <p>Loading product details...</p>
     </div>
+    
     <div v-else class="error">
       <p>Product not found or error loading product.</p>
+      <p>Product ID: {{ productId }}</p>
+      <p>Please check if the product exists in the database.</p>
       <button @click="goBack" class="back-btn">Go Back</button>
     </div>
   </div>
@@ -73,15 +97,60 @@ export default {
 
     const fetchProduct = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/${props.productId}`)
-        product.value = {
-          ...response.data,
-          image: response.data.image ? `http://localhost:3000/${response.data.image.replace(/\\/g, '/')}` : null,
+        console.log('Fetching product with ID:', props.productId)
+        
+        // Use the store getter first (teacher's requirement)
+        const storeProduct = productStore.getProductById(props.productId)
+        if (storeProduct) {
+          product.value = processProductImage(storeProduct)
+          console.log('Using product from store:', product.value)
+          return
         }
+        
+        console.log('Product not found in store, fetching from API')
+        const response = await axios.get(`${API_BASE_URL}/${props.productId}`)
+        product.value = processProductImage(response.data)
+        console.log('Fetched product from API:', product.value)
       } catch (error) {
         console.error('Error fetching product:', error)
       } finally {
         loading.value = false
+      }
+    }
+
+    const processProductImage = (productData) => {
+      let imagePath = null
+      
+      // Handle JSON array format like ["uploads\\product\\..."]
+      if (productData.image) {
+        try {
+          if (typeof productData.image === 'string' && productData.image.startsWith('[')) {
+            const imageArray = JSON.parse(productData.image)
+            if (Array.isArray(imageArray) && imageArray.length > 0) {
+              imagePath = imageArray[0]
+            }
+          } else if (Array.isArray(productData.image) && productData.image.length > 0) {
+            // If it's already an array, take the first image
+            imagePath = productData.image[0]
+          } else {
+            // If it's a simple string, use it directly
+            imagePath = productData.image
+          }
+          
+          // Clean up the path and add server URL
+          if (imagePath) {
+            imagePath = imagePath.replace(/\\\\/g, '/').replace(/\\/g, '/')
+            imagePath = `http://localhost:3000/${imagePath}`
+          }
+        } catch (error) {
+          console.error('Error parsing image for product:', productData.name, error)
+          imagePath = null
+        }
+      }
+      
+      return {
+        ...productData,
+        image: imagePath
       }
     }
 
@@ -111,7 +180,13 @@ export default {
     }
 
     onMounted(async () => {
-      await productStore.fetchCategories()
+      // Initialize store data first
+      await productStore.initializeData()
+      console.log('ProductDetailView - Store initialized')
+      console.log('Products in store:', productStore.products.length)
+      console.log('Looking for product ID:', props.productId)
+      
+      // Then fetch specific product
       await fetchProduct()
     })
 
@@ -119,6 +194,7 @@ export default {
       product,
       loading,
       quantity,
+      productStore,
       getCategoryName,
       addToCart,
       buyNow,
@@ -259,6 +335,76 @@ export default {
 
 .back-btn:hover {
   background-color: #7f8c8d;
+}
+
+.debug-info {
+  background: #f8f9fa;
+  border: 2px solid #007bff;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.debug-info p {
+  margin: 8px 0;
+  font-weight: bold;
+}
+
+.debug-info details {
+  margin: 10px 0;
+}
+
+.debug-info summary {
+  cursor: pointer;
+  color: #007bff;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.debug-info ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.debug-info li {
+  margin: 4px 0;
+  color: #333;
+}
+
+.debug-info pre {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  color: #000;
+}
+
+.no-image-placeholder {
+  width: 100%;
+  height: 400px;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.error p {
+  margin: 10px 0;
+}
+
+.error p:first-child {
+  font-weight: bold;
+  color: #e74c3c;
 }
 
 @media (max-width: 768px) {

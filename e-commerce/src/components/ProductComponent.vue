@@ -4,19 +4,25 @@
     <div class="products-grid">
       <div 
         class="product-card"
-        v-for="(product, index) in displayedProducts"
+        v-for="(product, index) in products"
         :key="index"
         @click="viewProductDetail(product)"
       >
-        <img v-if="product.image" :src="product.image" alt="Product Image" class="product-image" />
+        <img 
+          v-if="product.image" 
+          :src="product.image" 
+          alt="Product Image" 
+          class="product-image"
+        />
         <div class="product-info">
           <h3>{{ product.name }}</h3>
           <p class="rating">Rating: {{ product.rating }}/5</p>
           <p class="size">Size: {{ product.size }}</p>
           <p class="promotion">Promotion: {{ product.promotionAsPercentage }}%</p>
-          <p class="category">Category ID: {{ product.categoryId }}</p>
+          <p class="category">Category: {{ getCategoryName(product.categoryId) }}</p>
           <p class="sold">Sold: {{ product.countSold }}</p>
           <p class="group">Group: {{ product.group }}</p>
+          <p class="price">Price: ${{ product.price }}</p>
         </div>
       </div>
     </div>
@@ -33,15 +39,63 @@ export default {
   setup() {
     const router = useRouter()
     const products = ref([]);
-    const API_BASE_URL = 'http://localhost:3000/api/products';
+    const categories = ref([]);
+    const API_BASE_URL = 'http://localhost:3000/api';
+    
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/categories`);
+        categories.value = response.data;
+        console.log('Fetched categories:', categories.value);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    const getCategoryName = (categoryId) => {
+      const category = categories.value.find(cat => cat.id == categoryId);
+      return category ? category.name : `Category ${categoryId}`;
+    };
     
     const fetchProducts = async () => {
       try {
-        const response = await axios.get(API_BASE_URL)
-        products.value = response.data.map(product => ({
-          ...product,
-          image: product.image ? `http://localhost:3000/${product.image.replace(/\\/g, '/')}` : null,
-        }))
+        const response = await axios.get(`${API_BASE_URL}/products`)
+        products.value = response.data.map(product => {
+          let imagePath = null
+          
+          // Handle JSON array format like ["uploads\\product\\..."]
+          if (product.image) {
+            try {
+              // If it's a JSON string array, parse it and take the first image
+              if (typeof product.image === 'string' && product.image.startsWith('[')) {
+                const imageArray = JSON.parse(product.image)
+                if (Array.isArray(imageArray) && imageArray.length > 0) {
+                  imagePath = imageArray[0]
+                }
+              } else if (Array.isArray(product.image) && product.image.length > 0) {
+                // If it's already an array, take the first image
+                imagePath = product.image[0]
+              } else {
+                // If it's a simple string, use it directly
+                imagePath = product.image
+              }
+              
+              // Clean up the path and add server URL
+              if (imagePath) {
+                imagePath = imagePath.replace(/\\\\/g, '/').replace(/\\/g, '/')
+                imagePath = `http://localhost:3000/${imagePath}`
+              }
+            } catch (error) {
+              console.error('Error parsing image for product:', product.name, error)
+              imagePath = null
+            }
+          }
+          
+          return {
+            ...product,
+            image: imagePath
+          }
+        })
         console.log('Fetched products:', products.value)
       } catch (error) {
         console.error('Error fetching products:', error)
@@ -52,11 +106,15 @@ export default {
       router.push(`/products/${product.id}`)
     }
 
-    onMounted(fetchProducts)
+    onMounted(async () => {
+      await fetchCategories();
+      await fetchProducts();
+    })
 
     return {
-      displayedProducts: products,
-      viewProductDetail
+      products,
+      viewProductDetail,
+      getCategoryName
     }
   }
 }
@@ -75,7 +133,6 @@ export default {
   gap: 15px; 
 }
 
-/* Each card will have these styles */
 .product-card {
   border: 1px solid #ddd;
   border-radius: 10px;

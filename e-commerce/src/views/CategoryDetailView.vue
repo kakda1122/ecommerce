@@ -1,12 +1,21 @@
 <template>
   <div class="category-detail">
+    <!-- Debug Info (can be removed in production) -->
+    <div v-if="false" class="debug-info">
+      <p>Category ID: {{ categoryId }}</p>
+      <p>Loading: {{ loading }}</p>
+      <p>Category: {{ category }}</p>
+      <p>Products Count: {{ products.length }}</p>
+    </div>
+
     <div v-if="category" class="category-header">
       <div class="category-info">
         <img v-if="category.image" :src="category.image" alt="Category Image" class="category-image" />
         <div class="category-details">
           <h1>{{ category.name }}</h1>
           <p class="description">{{ category.description || `Browse our ${category.name} collection` }}</p>
-          <p class="product-count">{{ category.productCount || 0 }} Products Available</p>
+          <p class="product-count">{{ category.productCount || products.length }} Products Available</p>
+          <p class="category-group" v-if="category.group">Group: {{ category.group }}</p>
         </div>
       </div>
     </div>
@@ -17,6 +26,7 @@
 
     <div v-else class="error">
       <p>Category not found or error loading category.</p>
+      <p>Category ID: {{ categoryId }}</p>
       <button @click="goBack" class="back-btn">Go Back</button>
     </div>
 
@@ -54,7 +64,8 @@
       </div>
 
       <div v-else class="no-products">
-        <p>No products found in this category.</p>
+        <h3>No products found in this category</h3>
+        <p>Check back later for new products in {{ category?.name }}</p>
       </div>
     </div>
   </div>
@@ -88,23 +99,101 @@ export default {
 
     const fetchCategory = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/categories/${props.categoryId}`)
-        category.value = {
-          ...response.data,
-          image: response.data.image ? `http://localhost:3000/${response.data.image.replace(/\\/g, '/')}` : null,
+        console.log('Getting category with ID:', props.categoryId)
+        
+        // Use store getter instead of API call
+        const categoryFromStore = productStore.getCategoryById(props.categoryId)
+        if (categoryFromStore) {
+          let imagePath = null
+          
+          // Handle JSON array format like ["uploads\\category\\..."]
+          if (categoryFromStore.image) {
+            try {
+              if (typeof categoryFromStore.image === 'string' && categoryFromStore.image.startsWith('[')) {
+                const imageArray = JSON.parse(categoryFromStore.image)
+                if (Array.isArray(imageArray) && imageArray.length > 0) {
+                  imagePath = imageArray[0]
+                }
+              } else if (Array.isArray(categoryFromStore.image) && categoryFromStore.image.length > 0) {
+                imagePath = categoryFromStore.image[0]
+              } else {
+                imagePath = categoryFromStore.image
+              }
+              
+              if (imagePath) {
+                imagePath = imagePath.replace(/\\\\/g, '/').replace(/\\/g, '/')
+                imagePath = `http://localhost:3000/${imagePath}`
+              }
+            } catch (error) {
+              console.error('Error parsing image for category:', categoryFromStore.name, error)
+              imagePath = null
+            }
+          }
+          
+          category.value = {
+            ...categoryFromStore,
+            image: imagePath,
+          }
+          console.log('Found category in store:', category.value)
+        } else {
+          console.log('Category not found in store either')
         }
       } catch (error) {
-        console.error('Error fetching category:', error)
+        console.error('Error getting category:', error)
       }
     }
 
     const fetchProductsByCategory = async () => {
       try {
+        console.log('Fetching products for category ID:', props.categoryId)
+        
+        // Use the store getter first (teacher's requirement)
+        const categoryProducts = productStore.getProductsByCategory(props.categoryId)
+        
+        if (categoryProducts.length > 0) {
+          products.value = categoryProducts.map(product => {
+            let imagePath = null
+            
+            // Handle JSON array format like ["uploads\\product\\..."]
+            if (product.image) {
+              try {
+                if (typeof product.image === 'string' && product.image.startsWith('[')) {
+                  const imageArray = JSON.parse(product.image)
+                  if (Array.isArray(imageArray) && imageArray.length > 0) {
+                    imagePath = imageArray[0]
+                  }
+                } else if (Array.isArray(product.image) && product.image.length > 0) {
+                  imagePath = product.image[0]
+                } else {
+                  imagePath = product.image
+                }
+                
+                if (imagePath) {
+                  imagePath = imagePath.replace(/\\\\/g, '/').replace(/\\/g, '/')
+                  imagePath = `http://localhost:3000/${imagePath}`
+                }
+              } catch (error) {
+                console.error('Error parsing image for product:', product.name, error)
+                imagePath = null
+              }
+            }
+            
+            return {
+              ...product,
+              image: imagePath
+            }
+          })
+          console.log('Using products from store getter:', products.value)
+          return
+        }
+        
+        // Fallback to API if no products in store
         const response = await axios.get(`${API_BASE_URL}/products?categoryId=${props.categoryId}`)
         products.value = response.data.map(product => ({
           ...product,
           image: product.image ? `http://localhost:3000/${product.image.replace(/\\/g, '/')}` : null,
         }))
+        console.log('Fetched products from API:', products.value)
       } catch (error) {
         console.error('Error fetching products:', error)
       }
@@ -140,10 +229,16 @@ export default {
     }
 
     onMounted(async () => {
+      // Initialize store data first (teacher's requirement)
+      await productStore.initializeData()
+      console.log('CategoryDetailView - Store initialized')
+      
+      // Then fetch specific category and its products
       await Promise.all([
         fetchCategory(),
         fetchProductsByCategory()
       ])
+      
       loading.value = false
     })
 
@@ -326,6 +421,33 @@ export default {
   padding: 50px;
   color: #7f8c8d;
   font-size: 1.1rem;
+}
+
+.category-group {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.debug-info {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+.no-products {
+  text-align: center;
+  padding: 50px;
+  color: #7f8c8d;
+}
+
+.no-products h3 {
+  color: #e74c3c;
+  margin-bottom: 10px;
 }
 
 @media (max-width: 768px) {

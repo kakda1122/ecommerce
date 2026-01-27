@@ -18,6 +18,7 @@
 import ButtonComponent from './ButtonComponent.vue';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useProductStore } from '../stores/product.js';
 import axios from 'axios';
 
 export default {
@@ -27,6 +28,7 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const productStore = useProductStore()
     const promotions = ref([]);
     const API_BASE_URL = 'http://localhost:3000/api/promotions';
 
@@ -44,19 +46,27 @@ export default {
       }
     };
 
-    onMounted(fetchPromotions);
-
     const shopNow = (promotion) => {
-      // Navigate to a product or category related to the promotion
+      // Always navigate to a product detail page
       if (promotion.productId) {
+        // Use the productId from promotion if available
         router.push(`/products/${promotion.productId}`);
-      } else if (promotion.categoryId) {
-        router.push(`/categories/${promotion.categoryId}`);
       } else {
-        // Navigate to deals page or home
-        router.push('/');
+        // Navigate to first available product
+        if (productStore.products.length > 0) {
+          const firstProduct = productStore.products[0];
+          router.push(`/products/${firstProduct.id}`);
+        } else {
+          // Fallback to home if no products available
+          router.push('/');
+        }
       }
     };
+
+    onMounted(async () => {
+      await productStore.initializeData();
+      await fetchPromotions();
+    });
 
     return {
       promotions,

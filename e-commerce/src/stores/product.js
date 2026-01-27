@@ -2,37 +2,29 @@ import { defineStore } from 'pinia'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
-    groups: [
-      'Food & Vegetables',
-      'Drinks & Beverages', 
-      'Bakery & Cookies',
-      'Meat & Seafood',
-      'Dairy & Eggs',
-      'Fruits',
-      'Snacks & Sweets',
-      'Pet Food'
-    ],
+    groups: [],
     promotions: [],
     categories: [],
-    products: [],
+    products: []
   }),
   getters: {
     getCategoriesByGroup: (state) => {
-      const grouped = {}
-      state.categories.forEach(category => {
-        const groupName = category.group || 'Other'
-        if (!grouped[groupName]) {
-          grouped[groupName] = []
-        }
-        grouped[groupName].push(category)
-      })
-      return grouped
+      return (groupName) => state.categories.filter((category) => category.group === groupName)
     },
-    getCategoryById: (state) => (id) => {
-      return state.categories.find(cat => cat.id === id)
+    getProductsByGroup: (state) => {
+      return (groupName) => state.products.filter((product) => product.group === groupName)
     },
-    getProductById: (state) => (id) => {
-      return state.products.find(product => product.id === id)
+    getProductsByCategory: (state) => {
+      return (categoryId) => state.products.filter((product) => product.categoryId == categoryId)
+    },
+    getPopularProducts: (state) => {
+      return state.products.filter((product) => product.countSold > 10)
+    },
+    getProductById: (state) => {
+      return (productId) => state.products.find((product) => product.id == productId)
+    },
+    getCategoryById: (state) => {
+      return (categoryId) => state.categories.find((category) => category.id == categoryId)
     }
   },
   actions: {
