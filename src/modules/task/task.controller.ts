@@ -6,34 +6,47 @@ import {
   Param,
   Patch,
   Post,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { TaskService } from './task.service';
+import { TasksService } from './task.service';
+import { CreateTaskDto } from './dto/create-task.dto';
 
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly taskService: TaskService) {}
+  constructor(private readonly taskService: TasksService) {}
 
   @Get('/:id')
-  getTask(@Param('id') id: string) {
-    return this.taskService.getTask(id);
+  getTask(@Param('id', ParseIntPipe) id: number) {
+    return this.taskService.findOne(id);
   }
+
+  @Get()
+  getAllTasks() {
+    return this.taskService.findAll();
+  }
+
   @Post('/')
-  createTask(@Body() body: any) {
-    return this.taskService.createTask(body);
+  createTask(@Body() body: CreateTaskDto) {
+    return this.taskService.create(body);
+  }
+
+  @Patch('/:id')
+  updateTask(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<CreateTaskDto>) {
+    return this.taskService.update(id, body);
   }
 
   @Patch('/:id/done')
-  markTaskAsDone(@Body() body: any, @Param('id') id: string) {
-    return this.taskService.updateTask(id, body);
+  markTaskAsDone(@Param('id', ParseIntPipe) id: number) {
+    return this.taskService.update(id, { completed: true });
   }
 
   @Patch('/:id/pending')
-  markTaskAsPending(@Body() body: any, @Param('id') id: string) {
-    return this.taskService.updateTask(id, body);
+  markTaskAsPending(@Param('id', ParseIntPipe) id: number) {
+    return this.taskService.update(id, { completed: false });
   }
 
   @Delete('/:id')
-  deleteTask(@Param('id') id: string) {
-    return this.taskService.deleteTask(id);
+  deleteTask(@Param('id', ParseIntPipe) id: number) {
+    return this.taskService.remove(id);
   }
 }
