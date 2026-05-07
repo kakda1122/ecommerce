@@ -11,23 +11,24 @@ import { Task } from '../task/task.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column({ unique: true })
-  username: string;
+  username?: string;
 
   @Column({ unique: true })
-  email: string;
+  email?: string;
 
   @Column()
-  password: string;
+  password?: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt?: Date;
 
-  @OneToMany(() => Task, (task) => task.user, { cascade: true })
-  tasks: Task[];
+  // Temporarily removed task relationship
+  // @OneToMany(() => Task, (task) => task.user, { cascade: true })
+  // tasks: Task[];
 }

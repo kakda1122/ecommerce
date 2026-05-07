@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { TasksService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { Task } from './task.entity';
 
 @Controller('tasks')
 export class TasksController {
@@ -31,18 +32,18 @@ export class TasksController {
   }
 
   @Patch('/:id')
-  updateTask(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<CreateTaskDto>) {
+  updateTask(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<Task>) {
     return this.taskService.update(id, body);
   }
 
   @Patch('/:id/done')
   markTaskAsDone(@Param('id', ParseIntPipe) id: number) {
-    return this.taskService.update(id, { completed: true });
+    return this.taskService.update(id, { completed: true, completedAt: new Date() });
   }
 
   @Patch('/:id/pending')
   markTaskAsPending(@Param('id', ParseIntPipe) id: number) {
-    return this.taskService.update(id, { completed: false });
+    return this.taskService.update(id, { completed: false, completedAt: null });
   }
 
   @Delete('/:id')

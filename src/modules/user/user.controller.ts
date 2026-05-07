@@ -29,7 +29,7 @@ export class UsersController {
     return this.userService.create(body);
   }
 
-  @Patch('/:id')
+  @Patch('/:id') // PATCH /users/:id
   updateUser(
     @Param('id') id: string,
     @Body() body: Partial<createUserDto>,

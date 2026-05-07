@@ -16,20 +16,12 @@ export class TasksService {
   }
 
   findAll() {
-    return this.tasksRepo.find({ relations: ['user'] });
+    return this.tasksRepo.find();
   }
 
   findOne(id: number) {
     return this.tasksRepo.findOne({
-      where: { id },
-      relations: ['user'],
-    });
-  }
-
-  findByUser(userId: number) {
-    return this.tasksRepo.find({
-      where: { userId },
-      relations: ['user'],
+      where: { id }
     });
   }
 
@@ -38,7 +30,8 @@ export class TasksService {
     return this.findOne(id);
   }
 
-  remove(id: number) {
-    return this.tasksRepo.delete(id);
+  async remove(id: number) {
+    await this.tasksRepo.delete(id);
+    return this.findAll();
   }
 }

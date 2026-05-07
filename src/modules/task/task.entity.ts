@@ -2,35 +2,37 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../user/user.entity';
 
 @Entity('tasks')
-export class Task {
+export class Task { 
   @PrimaryGeneratedColumn()
-  id: number;
+  id?: number;
 
   @Column()
-  name: string;
+  name?: string;
 
   @Column({ nullable: true })
-  description: string;
+  description?: string;
 
   @Column({ default: false })
-  completed: boolean;
+  completed?: boolean;
+
+  @Column({ type: 'datetime', nullable: true })
+  completedAt?: Date | null;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt?: Date;
 
-  @Column()
-  userId: number;
+  // Temporarily remove user relationship to fix database issues
+  // @Column({ nullable: true })
+  // userId: number;
 
-  @ManyToOne(() => User, (user) => user.tasks, { onDelete: 'CASCADE' })
-  user: User;
+  // @ManyToOne(() => User, (user) => user.tasks, { onDelete: 'CASCADE', nullable: true })
+  // user: User;
 }
